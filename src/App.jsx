@@ -11,6 +11,7 @@ import {
 } from './projectSchema'
 
 const STORAGE_KEY = 'local-studio-project-v1'
+const COMPLEX_EDIT_PATTERN = /\b(add|build|create|redesign|replace|restructure|new page|checkout|form|animation|mobile|responsive|navigation|multiple|entire|whole)\b/i
 
 function extractJson(text) {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)
@@ -56,6 +57,29 @@ async function askOllama(messages) {
   return data.message.content
 }
 
+async function askOpenAI(messages) {
+  const [systemMessage, ...inputMessages] = messages
+  const response = await fetch('/api/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      instructions: systemMessage?.content || '',
+      input: inputMessages.map(({ role, content }) => ({ role, content })),
+    }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || `OpenAI returned ${response.status}.`)
+  }
+  if (!data.text) throw new Error('OpenAI returned an empty response.')
+  return { text: data.text, model: data.model || 'OpenAI' }
+}
+
+function shouldUseOpenAIForEdit(request) {
+  return request.length > 120 || COMPLEX_EDIT_PATTERN.test(request)
+}
+
 function App() {
   const [prompt, setPrompt] = useState(
     'Create a premium one-page website for a neighbourhood coffee shop called North & Pine. Warm, calm, modern, with a menu preview, story, reviews and visit section.'
@@ -76,6 +100,8 @@ function App() {
   const [error, setError] = useState('')
   const [device, setDevice] = useState('desktop')
   const [exporting, setExporting] = useState(false)
+  const [provider, setProvider] = useState('auto')
+  const [activeModel, setActiveModel] = useState(MODEL)
 
   useEffect(() => {
     try {
@@ -97,6 +123,21 @@ function App() {
     setActivePageId(normalized.pages[0].id)
   }
 
+  async function askHybrid(messages, task, request = '') {
+    const useOpenAI = provider === 'openai'
+      || (provider === 'auto' && (task === 'generate' || shouldUseOpenAIForEdit(request)))
+
+    if (useOpenAI) {
+      const result = await askOpenAI(messages)
+      setActiveModel(result.model)
+      return result.text
+    }
+
+    const text = await askOllama(messages)
+    setActiveModel(MODEL)
+    return text
+  }
+
   async function generateProject() {
     if (!prompt.trim() || loading) return
     setLoading(true)
@@ -104,7 +145,7 @@ function App() {
     setStage('Planning pages and sections')
 
     try {
-      const response = await askOllama([
+      const response = await askHybrid([
         {
           role: 'system',
           content: `You are the planning engine in a local no-code website builder.
@@ -115,7 +156,7 @@ Return one JSON object only. Never return HTML, CSS, Markdown, or explanations.
 ${projectSchemaPrompt}`,
         },
         { role: 'user', content: prompt },
-      ])
+      ], 'generate', prompt)
 
       setStage('Validating the project')
       commitProject(extractJson(response))
@@ -135,7 +176,7 @@ ${projectSchemaPrompt}`,
     setStage('Applying your changes')
 
     try {
-      const response = await askOllama([
+      const response = await askHybrid([
         {
           role: 'system',
           content: `You edit an existing no-code website project.
@@ -148,7 +189,7 @@ ${projectSchemaPrompt}`,
           role: 'user',
           content: `CURRENT PROJECT:\n${JSON.stringify(project)}\n\nREQUESTED CHANGE:\n${editPrompt}`,
         },
-      ])
+      ], 'edit', editPrompt)
 
       commitProject(extractJson(response))
       setEditPrompt('')
@@ -212,15 +253,15 @@ ${projectSchemaPrompt}`,
     <main className="builder">
       <header className="topbar">
         <div className="brand">
-          <span className="brandMark">L</span>
+          <span className="brandMark">K</span>
           <div>
-            <strong>Local Studio</strong>
+            <strong>KSL Intelligence</strong>
             <small>AI website builder</small>
           </div>
         </div>
 
         <div className="topActions">
-          <span className="status"><i />{MODEL}</span>
+          <span className="status"><i />{activeModel}</span>
           <button onClick={undo} disabled={!history.length || loading}>Undo</button>
           <button onClick={downloadWebsite} disabled={exporting}>
             {exporting ? 'Exporting…' : 'Export website'}
@@ -234,9 +275,26 @@ ${projectSchemaPrompt}`,
           <p className="eyebrow">New project</p>
           <h1>Build anything you can describe.</h1>
           <p className="description">
-            The AI creates a structured project from reusable components, then you can
-            refine it with ordinary instructions.
+            KSL Intelligence chooses the right AI for the job, creates a structured
+            website, then lets you refine it with ordinary instructions.
           </p>
+
+          <div className="providerControl">
+            <label htmlFor="provider">AI mode</label>
+            <select
+              id="provider"
+              value={provider}
+              onChange={(event) => setProvider(event.target.value)}
+              disabled={loading}
+            >
+              <option value="auto">Automatic — recommended</option>
+              <option value="ollama">Ollama — local only</option>
+              <option value="openai">OpenAI — best quality</option>
+            </select>
+            <small>
+              Automatic uses Ollama for quick edits and OpenAI for new sites or larger changes.
+            </small>
+          </div>
 
           <label htmlFor="buildPrompt">Describe your website</label>
           <textarea
@@ -330,7 +388,7 @@ ${projectSchemaPrompt}`,
             <div className="loadingOverlay">
               <div className="spinner" />
               <strong>{stage || 'Working locally'}</strong>
-              <span>This can take a few minutes on an 8 GB Mac.</span>
+              <span>{activeModel === MODEL ? 'Local edits can take a few minutes on an 8 GB Mac.' : 'KSL Intelligence is preparing the updated website.'}</span>
             </div>
           )}
         </section>
