@@ -1,4 +1,4 @@
-# KSL Intelligence
+# Local Studio
 
 A local, prompt-driven website builder for macOS. Ollama creates structured JSON;
 React components render the website reliably. The model never writes raw HTML.
@@ -38,6 +38,7 @@ Open the local address Vite prints, normally <http://localhost:5173>.
 - Free stock-image search through Wikimedia Commons with creator attribution
 - Desktop, tablet and mobile previews
 - Undo, browser autosave and JSON export
+- Standalone website ZIP export with HTML, CSS and embedded image assets
 
 ## If Ollama returns 404
 
