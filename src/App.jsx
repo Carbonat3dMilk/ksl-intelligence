@@ -148,7 +148,12 @@ function App() {
       const response = await askHybrid([
         {
           role: 'system',
-          content: `You are the planning engine in a local no-code website builder.
+          content: `You are the planning and product-design engine inside KSL Intelligence.
+Think like a senior web designer and product manager before producing JSON:
+1. Identify the business, audience, desired action and every explicitly requested feature.
+2. Translate informal, misspelled or non-technical wording into the intended function.
+3. Build a clear conversion journey, not a random collection of sections.
+4. Use implementationNotes to be honest about anything that needs a live backend.
 Turn the request into a polished website project using the supplied JSON schema.
 Choose only supported section types. Write specific, believable copy for the requested business.
 Return one JSON object only. Never return HTML, CSS, Markdown, or explanations.
@@ -181,6 +186,10 @@ ${projectSchemaPrompt}`,
           role: 'system',
           content: `You edit an existing no-code website project.
 Apply the user's requested change while preserving everything unrelated.
+Interpret ordinary, misspelled or non-technical language by its intended outcome.
+Never silently omit a named feature. Map it to the closest supported section and record any
+backend requirement in implementationNotes. Improve hierarchy, spacing, copy and conversion
+flow when the requested change affects the design.
 Return the complete updated JSON object only. Never return HTML, CSS, Markdown, or explanations.
 
 ${projectSchemaPrompt}`,
@@ -346,6 +355,14 @@ ${projectSchemaPrompt}`,
             <span>{project.pages.reduce((sum, page) => sum + page.sections.length, 0)} sections</span>
             <span>Saved automatically on this computer</span>
           </div>
+          {!!project.implementationNotes?.length && (
+            <div className="implementationNotes">
+              <strong>What the AI understood</strong>
+              {project.implementationNotes.map((note, index) => (
+                <p key={`${note}-${index}`}>{note}</p>
+              ))}
+            </div>
+          )}
         </aside>
 
         <section className="previewPanel">
