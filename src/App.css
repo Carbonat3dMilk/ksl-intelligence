@@ -83,6 +83,12 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .projectInfo { margin-top: 22px; padding-top: 18px; border-top: 1px solid #29292f; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; color: #777781; font-size: 10px; }
 .projectInfo strong { grid-column: 1 / -1; color: #cfcfd6; font-size: 11px; }
 .projectInfo span:last-child { grid-column: 1 / -1; }
+.implementationNotes {
+  margin-top: 12px; padding: 12px; border: 1px solid rgba(120, 103, 237, .24);
+  border-radius: 10px; background: rgba(120, 103, 237, .07);
+}
+.implementationNotes strong { color: #d9d3ff; font-size: 10px; }
+.implementationNotes p { margin: 7px 0 0; color: #9999a6; font-size: 9px; line-height: 1.45; }
 
 .imagePanel { display: grid; gap: 9px; }
 .imagePanel select, .imageSearch input {

@@ -13,6 +13,24 @@ function Action({ action, primary, onNavigate }) {
 }
 
 function Cards({ items, type }) {
+  if (type === 'form' || type === 'newsletter') {
+    return (
+      <form className={`siteForm ${type}`} onSubmit={(event) => event.preventDefault()}>
+        {items.map((item, index) => {
+          const inputType = ['email', 'tel', 'date', 'time'].includes(item.meta) ? item.meta : 'text'
+          return (
+            <label key={`${item.title}-${index}`}>
+              <span>{item.title}</span>
+              {item.meta === 'textarea'
+                ? <textarea placeholder={item.text || item.title} />
+                : <input type={inputType} placeholder={item.text || item.title} />}
+            </label>
+          )
+        })}
+        <button type="submit">Submit</button>
+      </form>
+    )
+  }
   return (
     <div className={`siteGrid ${type}`}>
       {items.map((item, index) => (
@@ -62,7 +80,7 @@ function Section({ section, onNavigate }) {
 
   const isCallout = section.type === 'cta' || section.type === 'contact'
   return (
-    <section id={section.id} className={`siteSection ${isCallout ? 'siteCallout' : ''}`}>
+    <section id={section.id} className={`siteSection layout-${section.layout || 'default'} ${isCallout ? 'siteCallout' : ''}`}>
       <div className="sectionHeading">
         {section.eyebrow && <p className="siteEyebrow">{section.eyebrow}</p>}
         <h2>{section.title}</h2>
@@ -94,7 +112,7 @@ export default function SitePreview({ project, page, onNavigate }) {
 
   return (
     <div
-      className={`generatedSite font-${theme.font}`}
+      className={`generatedSite font-${theme.font} style-${theme.style || 'minimal'}`}
       style={{
         '--site-primary': theme.primary,
         '--site-accent': theme.accent,
