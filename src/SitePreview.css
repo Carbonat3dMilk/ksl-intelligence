@@ -24,6 +24,15 @@
 .siteNav .navCta { justify-self: end; padding: 10px 15px; border-radius: calc(var(--site-radius) * .65); color: white; background: var(--site-primary); font-size: 12px; font-weight: 750; }
 
 .siteSection { padding: clamp(70px, 9vw, 125px) max(6vw, 28px); scroll-margin-top: 74px; }
+.siteSection:nth-of-type(even):not(.siteHero):not(.siteCallout) { background: color-mix(in srgb, var(--site-surface) 42%, transparent); }
+.layout-centered .sectionHeading { margin-right: auto; margin-left: auto; text-align: center; }
+.layout-centered .siteActions { justify-content: center; }
+.layout-split:not(.siteHero) { display: grid; grid-template-columns: .8fr 1.2fr; gap: 6vw; align-items: center; }
+.layout-split .sectionHeading { margin-bottom: 0; }
+.layout-bento .siteGrid { grid-template-columns: repeat(4, 1fr); }
+.layout-bento .siteCard:first-child { grid-column: span 2; grid-row: span 2; }
+.layout-bento .siteCard:nth-child(4) { grid-column: span 2; }
+.layout-compact { padding-top: 48px; padding-bottom: 48px; }
 .siteHero { min-height: 610px; position: relative; display: grid; grid-template-columns: 1.18fr .82fr; align-items: center; gap: 7vw; overflow: hidden; }
 .heroContent { position: relative; z-index: 1; max-width: 720px; }
 .siteEyebrow { margin: 0 0 14px; color: var(--site-primary); font-family: Inter, sans-serif; font-size: 11px; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; }
@@ -54,7 +63,9 @@
 .siteCard {
   min-height: 210px; padding: 25px; border: 1px solid color-mix(in srgb, var(--site-text) 10%, transparent);
   border-radius: var(--site-radius); background: var(--site-surface);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
+.siteCard:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--site-primary) 35%, transparent); box-shadow: 0 18px 45px color-mix(in srgb, var(--site-text) 9%, transparent); }
 .cardNumber { color: var(--site-primary); font-size: 10px; font-weight: 850; letter-spacing: .1em; }
 .siteCard small { display: block; margin-top: 18px; color: var(--site-primary); font-weight: 750; }
 .siteCard h3 { margin: 36px 0 9px; font-size: 20px; line-height: 1.15; letter-spacing: -.02em; }
@@ -65,6 +76,33 @@
 .siteGrid.stats .siteCard { min-height: 150px; }
 .siteGrid.stats .siteCard h3 { font-size: 38px; color: var(--site-primary); }
 .siteGrid.faq { grid-template-columns: repeat(2, 1fr); }
+.siteGrid.logos { grid-template-columns: repeat(4, 1fr); }
+.siteGrid.logos .siteCard { min-height: 100px; display: grid; place-items: center; text-align: center; }
+.siteGrid.logos .cardNumber, .siteGrid.logos .siteCard p { display: none; }
+.siteGrid.logos .siteCard h3 { margin: 0; }
+.siteGrid.comparison .siteCard { border-top: 4px solid var(--site-primary); }
+.siteForm {
+  max-width: 780px; padding: clamp(20px, 4vw, 38px); display: grid;
+  grid-template-columns: repeat(2, 1fr); gap: 16px; border: 1px solid color-mix(in srgb, var(--site-text) 10%, transparent);
+  border-radius: var(--site-radius); background: var(--site-surface);
+}
+.siteForm label { display: grid; gap: 7px; color: var(--site-text); font-size: 12px; font-weight: 750; }
+.siteForm input, .siteForm textarea {
+  width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--site-text) 16%, transparent);
+  border-radius: calc(var(--site-radius) * .65); outline: 0; color: var(--site-text); background: var(--site-bg); font: inherit;
+}
+.siteForm textarea { min-height: 110px; resize: vertical; }
+.siteForm label:has(textarea) { grid-column: 1 / -1; }
+.siteForm button { min-height: 48px; padding: 0 20px; border: 0; border-radius: calc(var(--site-radius) * .65); color: white; background: var(--site-primary); font-weight: 800; }
+.siteForm.newsletter { max-width: 680px; grid-template-columns: 1fr auto; }
+.siteForm.newsletter label { min-width: 260px; }
+.style-bold .siteHero h1 { text-transform: uppercase; letter-spacing: -.065em; }
+.style-bold .siteCard { border-width: 2px; box-shadow: 7px 7px 0 var(--site-primary); }
+.style-luxury .siteEyebrow { color: var(--site-accent); }
+.style-luxury .siteCard { box-shadow: 0 24px 70px color-mix(in srgb, var(--site-text) 7%, transparent); }
+.style-playful .siteCard:nth-child(odd) { transform: rotate(-.7deg); }
+.style-playful .siteCard:nth-child(even) { transform: rotate(.7deg); }
+.style-industrial .siteCard, .style-industrial .siteButton, .style-industrial .siteNav .navCta { border-radius: 2px; }
 
 .siteCallout {
   margin: 35px max(3vw, 16px); padding: clamp(60px, 8vw, 100px);
@@ -84,8 +122,14 @@
   .siteNav { grid-template-columns: 1fr auto; }
   .siteNav > div { display: none; }
   .siteHero { min-height: auto; grid-template-columns: 1fr; }
+  .layout-split:not(.siteHero) { grid-template-columns: 1fr; }
+  .layout-bento .siteGrid { grid-template-columns: 1fr; }
+  .layout-bento .siteCard:first-child, .layout-bento .siteCard:nth-child(4) { grid-column: auto; grid-row: auto; }
   .heroArt { width: min(330px, 90%); margin: 10px auto 0; }
   .siteGrid, .siteGrid.faq { grid-template-columns: 1fr; }
+  .siteGrid.logos { grid-template-columns: repeat(2, 1fr); }
+  .siteForm, .siteForm.newsletter { grid-template-columns: 1fr; }
+  .siteForm label, .siteForm label:has(textarea) { grid-column: auto; min-width: 0; }
   .siteFooter { grid-template-columns: 1fr; }
   .siteFooter span { text-align: left; }
 }
