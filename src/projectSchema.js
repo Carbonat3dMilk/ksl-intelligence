@@ -2,8 +2,10 @@ export const MODEL = 'qwen2.5-coder:3b'
 
 const allowedTypes = new Set([
   'hero', 'features', 'products', 'testimonials', 'stats', 'pricing',
-  'team', 'gallery', 'faq', 'content', 'contact', 'cta',
+  'team', 'gallery', 'faq', 'content', 'contact', 'cta', 'process',
+  'comparison', 'logos', 'form', 'newsletter',
 ])
+const allowedLayouts = new Set(['default', 'centered', 'split', 'bento', 'compact'])
 
 export function createStarterProject() {
   return {
@@ -19,6 +21,7 @@ export function createStarterProject() {
       muted: '#666671',
       radius: '18px',
       font: 'modern',
+      style: 'minimal',
     },
     navigation: { ctaLabel: 'Get started', ctaTarget: 'contact' },
     pages: [
@@ -70,6 +73,7 @@ function normalizeSection(section, index) {
     id: cleanString(section?.id, `${type}-${index + 1}`)
       .toLowerCase().replace(/[^a-z0-9-]/g, '-') || `${type}-${index + 1}`,
     type,
+    layout: allowedLayouts.has(section?.layout) ? section.layout : 'default',
     eyebrow: cleanString(section?.eyebrow),
     title: cleanString(section?.title, 'Untitled section'),
     text: cleanString(section?.text),
@@ -124,6 +128,9 @@ export function normalizeProject(value) {
     slug: cleanString(value?.slug, fallback.slug)
       .toLowerCase().replace(/[^a-z0-9-]/g, '-') || fallback.slug,
     description: cleanString(value?.description, fallback.description),
+    implementationNotes: Array.isArray(value?.implementationNotes)
+      ? value.implementationNotes.slice(0, 6).map((note) => cleanString(note)).filter(Boolean)
+      : [],
     theme: {
       primary: /^#[0-9a-f]{6}$/i.test(theme.primary) ? theme.primary : fallback.theme.primary,
       accent: /^#[0-9a-f]{6}$/i.test(theme.accent) ? theme.accent : fallback.theme.accent,
@@ -135,6 +142,8 @@ export function normalizeProject(value) {
         ? theme.radius : fallback.theme.radius,
       font: ['modern', 'editorial', 'friendly'].includes(theme.font)
         ? theme.font : fallback.theme.font,
+      style: ['minimal', 'bold', 'luxury', 'playful', 'industrial'].includes(theme.style)
+        ? theme.style : fallback.theme.style,
     },
     navigation: {
       ctaLabel: cleanString(value?.navigation?.ctaLabel, 'Get started'),
@@ -149,18 +158,21 @@ export const projectSchemaPrompt = `JSON SHAPE:
   "name": "Site name",
   "slug": "site-name",
   "description": "Short summary",
+  "implementationNotes": ["What was built or what still needs a live backend"],
   "theme": {
     "primary": "#sixhex", "accent": "#sixhex", "background": "#sixhex",
     "surface": "#sixhex", "text": "#sixhex", "muted": "#sixhex",
     "radius": "0px|8px|14px|18px|24px",
-    "font": "modern|editorial|friendly"
+    "font": "modern|editorial|friendly",
+    "style": "minimal|bold|luxury|playful|industrial"
   },
   "navigation": { "ctaLabel": "Label", "ctaTarget": "section-id" },
   "pages": [{
     "id": "home", "name": "Home",
     "sections": [{
       "id": "unique-id",
-      "type": "hero|features|products|testimonials|stats|pricing|team|gallery|faq|content|contact|cta",
+      "type": "hero|features|products|testimonials|stats|pricing|team|gallery|faq|content|contact|cta|process|comparison|logos|form|newsletter",
+      "layout": "default|centered|split|bento|compact",
       "eyebrow": "Optional short label",
       "title": "Heading",
       "text": "Supporting copy",
@@ -176,7 +188,20 @@ export const projectSchemaPrompt = `JSON SHAPE:
 RULES:
 - Use 1 to 4 pages and 4 to 9 sections per page.
 - Every page needs a hero or content introduction and a cta or contact ending.
-- Use concise copy. Use at most 6 items per section.
+- First understand the requested outcome, audience and feature behaviour. Preserve every explicitly named feature.
+- Translate common requests intelligently:
+  booking/appointment -> form with date, time and contact fields;
+  quote/enquiry -> form; how it works -> process; before vs after -> comparison;
+  trusted by/partners -> logos; email signup -> newsletter; packages -> pricing;
+  reviews/social proof -> testimonials plus stats when useful.
+- A form item title is its field label, text is helper text, and meta is text|email|tel|date|time|textarea.
+- Use implementationNotes to state what was built. If a feature needs authentication, payments,
+  uploads, a database, email delivery or another live backend, say so instead of pretending it works.
+- Use concise, specific copy. Avoid generic filler and fake statistics. Use at most 6 items per section.
+- Choose varied layouts deliberately. Use bento for mixed feature importance, split for image-led
+  content, centered for focused conversion sections and compact for logos or simple proof.
+- Make the visual direction fit the business. Avoid default purple unless the prompt calls for it.
+- Maintain strong colour contrast. Surface and background must be visibly different.
 - Use valid six-digit hex colours.
 - IDs and targets use lowercase kebab-case.
 - Set imageQuery for every hero, gallery, product, team and content section.
