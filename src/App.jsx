@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import SitePreview from './SitePreview'
 import ImagePanel from './ImagePanel'
+import { exportWebsiteZip } from './exportWebsite'
 import {
   MODEL,
   createStarterProject,
@@ -74,6 +75,7 @@ function App() {
   const [stage, setStage] = useState('')
   const [error, setError] = useState('')
   const [device, setDevice] = useState('desktop')
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     try {
@@ -179,6 +181,19 @@ ${projectSchemaPrompt}`,
     URL.revokeObjectURL(url)
   }
 
+  async function downloadWebsite() {
+    if (exporting) return
+    setExporting(true)
+    setError('')
+    try {
+      await exportWebsiteZip(project)
+    } catch {
+      setError('The website ZIP could not be created.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   function setSectionImage(pageId, sectionId, image) {
     const nextProject = {
       ...project,
@@ -199,7 +214,7 @@ ${projectSchemaPrompt}`,
         <div className="brand">
           <span className="brandMark">L</span>
           <div>
-            <strong>KSL Intelligence</strong>
+            <strong>Local Studio</strong>
             <small>AI website builder</small>
           </div>
         </div>
@@ -207,6 +222,9 @@ ${projectSchemaPrompt}`,
         <div className="topActions">
           <span className="status"><i />{MODEL}</span>
           <button onClick={undo} disabled={!history.length || loading}>Undo</button>
+          <button onClick={downloadWebsite} disabled={exporting}>
+            {exporting ? 'Exporting…' : 'Export website'}
+          </button>
           <button onClick={downloadProject}>Export JSON</button>
         </div>
       </header>
